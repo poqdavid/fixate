@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<LangVersion>10</LangVersion>
+	<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+	<AssemblyName>Fixate</AssemblyName>
+	<RootNamespace>Fixate</RootNamespace>
+	<Description>A Guild Wars 2 Discord Bot for calling out raid mechanics among other things.</Description>
+	<AssemblyVersion>1.0.0.0</AssemblyVersion>
+	<FileVersion>1.0.0.0</FileVersion>
+	<Copyright>Copyright © 2022</Copyright>
+	<PackageId>Fixate</PackageId>
+	<Product>Fixate</Product>
+	<Authors>POQDavid</Authors>
+	<Version>1.0.0.0</Version>
+	<RepositoryType>git</RepositoryType>
+	<RepositoryUrl>git@github.com:vortex1409/fixate.git</RepositoryUrl>
+	<PackageProjectUrl>https://github.com/vortex1409/fixate</PackageProjectUrl>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<Platforms>x64;x86</Platforms>
+	<PackageIcon>Fixate.png</PackageIcon>
+	<ApplicationIcon>Fixate.ico</ApplicationIcon>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01067" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01067" />
+    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01067" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-01067" />
+    <PackageReference Include="DSharpPlus.VoiceNext.Natives" Version="1.0.0" />
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.20.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NWaves" Version="0.9.6" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  	<ItemGroup>
+  		<_CopyItems Include="Resources\**\*.*" />
+  	</ItemGroup>
+  	<Copy SourceFiles="@(_CopyItems)" DestinationFiles="@(_CopyItems->'$(OutDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+</Project>

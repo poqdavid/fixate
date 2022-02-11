@@ -1,0 +1,13 @@
+{
+  "discord": {
+    "token": "<token>",
+    "prefix": "!"
+  },
+  "voice": {
+    "apitoken": "",
+    "apiregion": "",
+    "language": "en-US",
+    "name": "en-US-JennyNeural",
+    "style": "chat"
+  }
+}
