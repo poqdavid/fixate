@@ -23,16 +23,23 @@
 	<Platforms>x64;x86</Platforms>
 	<PackageIcon>Fixate.png</PackageIcon>
 	<ApplicationIcon>Fixate.ico</ApplicationIcon>
+	<DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <Optimize>False</Optimize>
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01067" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01067" />
-    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01067" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-01067" />
+    <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01091" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01091" />
+    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01091" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-01091" />
     <PackageReference Include="DSharpPlus.VoiceNext.Natives" Version="1.0.0" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.20.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
@@ -52,9 +59,17 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-  	<ItemGroup>
-  		<_CopyItems Include="Resources\**\*.*" />
-  	</ItemGroup>
-  	<Copy SourceFiles="@(_CopyItems)" DestinationFiles="@(_CopyItems->'$(OutDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ItemGroup>
+      <_CopyItems Include="Resources\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_CopyItems)" DestinationFiles="@(_CopyItems->'$(OutDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
+	
+  <Target Name="MyCustomActionAfterPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_CopyItems Include="Resources\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_CopyItems)" DestinationFiles="@(_CopyItems->'$(PublishDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
 </Project>

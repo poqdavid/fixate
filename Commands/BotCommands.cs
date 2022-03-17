@@ -84,7 +84,9 @@ public class BotCommands : BaseCommandModule
         }
 
         string boss = objects[0];
-        await ctx.RespondAsync($"You picked boss: {boss}");
+        string res = "";
+
+        res += $"You picked boss: {boss}";
 
         int players = Program.bossDatas[boss].Mechanics[0].PlayersInvolved;
 
@@ -92,17 +94,46 @@ public class BotCommands : BaseCommandModule
         {
             if (objects.Length == 1 || !(objects.Length >= (players + 1)))
             {
-                await ctx.RespondAsync($"Please enter {players} names seperated by space.");
+                res += $"\nPlease enter {players} names seperated by space.";
+                await ctx.RespondAsync(res);
                 return;
             }
 
-            await ctx.RespondAsync("Players are:");
+            List<string> playernames = new();
+            res += "\nPlayers are:";
             foreach (string data in objects)
             {
                 if (!data.Equals(boss))
-                    await ctx.RespondAsync(data);
+                {
+                    playernames.Add(data);
+                    res += "\n" + data;
+                }
             }
+
+            var vnext = ctx.Client.GetVoiceNext();
+            if (vnext == null)
+            {
+                await ctx.RespondAsync("VNext is not enabled or configured.");
+                return;
+            }
+
+            var vnc = vnext.GetConnection(ctx.Guild);
+            if (vnc == null)
+            {
+                await ctx.RespondAsync("Not connected in this guild.");
+                return;
+            }
+
+            Program.RunMechanic(Program.bossDatas[boss], playernames.ToArray(), vnc);
         }
+        await ctx.RespondAsync(res);
+    }
+
+    [Command("stop"), Description("Stops the bot.")]
+    public async Task Stop(CommandContext ctx)
+    {
+        Program.stop = true;
+        await ctx.RespondAsync("Stopped!!");
     }
 
     [Command("say"), Description("Says the text in voice.")]

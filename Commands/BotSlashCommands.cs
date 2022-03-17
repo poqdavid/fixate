@@ -96,15 +96,43 @@ public class BotSlashCommands : ApplicationCommandModule
                 return;
             }
 
+            List<string> playernames = new();
             res += "\nPlayers are:";
             foreach (string data in objects)
             {
                 if (!data.Equals(boss))
+                {
+                    playernames.Add(data);
                     res += "\n" + data;
+                }
             }
+
+            var vnext = ctx.Client.GetVoiceNext();
+            if (vnext == null)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("VNext is not enabled or configured."));
+                return;
+            }
+
+            var vnc = vnext.GetConnection(ctx.Guild);
+            if (vnc == null)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Not connected in this guild."));
+                return;
+            }
+
+            Program.RunMechanic(Program.bossDatas[boss], playernames.ToArray(), vnc);
         }
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(res));
+    }
+
+    [SlashCommand("stop", "Stops the bot.")]
+    public async Task Stop(InteractionContext ctx)
+    {
+        Program.stop = true;
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Stopped!!!"));
     }
 
     [SlashCommand("say", "Says the text in voice.")]

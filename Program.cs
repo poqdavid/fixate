@@ -40,6 +40,8 @@ internal class Program
     public CommandsNextExtension Commands { get; set; }
     public VoiceNextExtension Voice { get; set; }
 
+    public static bool stop = false;
+
     private static void Main(string[] args)
     {
         Thread.CurrentThread.Name = "MainThread";
@@ -57,13 +59,15 @@ internal class Program
         {
             Config.LoadSettings();
         }
-        catch (Exception ex) { Logger.Error(ex, $"Error loading {SettingPath}"); }
+        catch (Exception ex) { Logger.Error(ex, "Error loading {SettingPath}", SettingPath); }
         finally { logger.Information("Settings loaded"); }
 
-        Localization = GetLocalization() ?? new();
+        Localization = GetLocalization();
 
         var prog = new Program();
-        prog.RunBotAsync().GetAwaiter().GetResult();
+
+        try { prog.RunBotAsync().GetAwaiter().GetResult(); }
+        catch (Exception ex) { Logger.Error(ex, ex.Message); }
     }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -84,7 +88,7 @@ internal class Program
                 {
                     string shortfilename = file.Replace(CurrentDir, "");
 
-                    Logger.Information($"Loading {shortfilename}");
+                    Logger.Information("Loading {ShortFileName}", shortfilename);
                     string json_string = File.ReadAllText(file);
 
                     if (Json.IsValid(json_string))
@@ -97,12 +101,12 @@ internal class Program
 
                         try
                         {
-                            BossData bd = JsonConvert.DeserializeObject<BossData>(json_string, s) ?? throw new Exception($"Error deserializing data"); ;
+                            BossData bd = JsonConvert.DeserializeObject<BossData>(json_string, s) ?? throw new Exception("Error deserializing data"); ;
                             bossDatas.Add(bd.Name, bd);
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error(ex, $"Problem with deserializing {shortfilename}");
+                            Logger.Error(ex, "Problem with deserializing {ShortFileName}", shortfilename);
                         }
                     }
                     Logger.Information("Loaded");
@@ -161,14 +165,18 @@ internal class Program
 
     private Task Slash_SlashCommandInvoked(SlashCommandsExtension sender, DSharpPlus.SlashCommands.EventArgs.SlashCommandInvokedEventArgs e)
     {
-        e.Context.Client.Logger.LogInformation(BotEventId, $"{e.Context.User.Username} successfully invoked '{e.Context.CommandName}'");
+        Thread.CurrentThread.Name = "MainThread";
+
+        e.Context.Client.Logger.LogInformation(BotEventId, "{Username} successfully invoked '{CommandName}'", e.Context.User.Username, e.Context.CommandName);
 
         return Task.CompletedTask;
     }
 
     private async Task Slash_SlashCommandErrored(SlashCommandsExtension sender, DSharpPlus.SlashCommands.EventArgs.SlashCommandErrorEventArgs e)
     {
-        e.Context.Client.Logger.LogError(BotEventId, $"{e.Context.User.Username} tried executing '{e.Context?.CommandName ?? "<unknown command>"}' but it errored: {e.Exception.GetType()}: {e.Exception.Message ?? "<no message>"}", DateTime.Now);
+        Thread.CurrentThread.Name = "MainThread";
+
+        e.Context.Client.Logger.LogError(BotEventId, "{Username} tried executing '{CommandName}' but it errored: {Type}: {Message}", e.Context.User.Username, e.Context?.CommandName ?? "<unknown command>", e.Exception.GetType(), e.Exception.Message ?? "<no message>");
 
         if (e.Exception is ChecksFailedException ex)
         {
@@ -188,7 +196,7 @@ internal class Program
     {
         Thread.CurrentThread.Name = "MainThread";
 
-        e.Context.Client.Logger.LogInformation(BotEventId, $"{e.Context.User.Username} successfully executed '{e.Context.CommandName}'");
+        e.Context.Client.Logger.LogInformation(BotEventId, "{Username} successfully executed '{CommandName}'", e.Context.User.Username, e.Context.CommandName);
 
         return Task.CompletedTask;
     }
@@ -206,7 +214,7 @@ internal class Program
     {
         Thread.CurrentThread.Name = "MainThread";
 
-        sender.Logger.LogInformation(BotEventId, $"Guild available: {e.Guild.Name}");
+        sender.Logger.LogInformation(BotEventId, "Guild available: {GuildName}", e.Guild.Name);
 
         return Task.CompletedTask;
     }
@@ -222,8 +230,7 @@ internal class Program
 
     private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
     {
-
-        e.Context.Client.Logger.LogInformation(BotEventId, $"{e.Context.User.Username} successfully executed '{e.Command.QualifiedName}'");
+        e.Context.Client.Logger.LogInformation(BotEventId, "{Username} successfully executed '{QualifiedName}'", e.Context.User.Username, e.Command.QualifiedName);
 
         return Task.CompletedTask;
     }
@@ -232,7 +239,7 @@ internal class Program
     {
         Thread.CurrentThread.Name = "MainThread";
 
-        e.Context.Client.Logger.LogError(BotEventId, $"{e.Context.User.Username} tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception.GetType()}: {e.Exception.Message ?? "<no message>"}", DateTime.Now);
+        e.Context.Client.Logger.LogError(BotEventId, "{Username} tried executing '{QualifiedName}' but it errored: {Type}: {Message}", e.Context.User.Username, e.Command?.QualifiedName ?? "<unknown command>", e.Exception.GetType(), e.Exception.Message ?? "<no message>");
 
         if (e.Exception is ChecksFailedException ex)
         {
@@ -260,19 +267,19 @@ internal class Program
             using var result = await synthesizer.SpeakSsmlAsync(ssml);
             if (result.Reason == ResultReason.SynthesizingAudioCompleted)
             {
-                Logger.Warning($"Speech synthesized for text [{text}], and the audio was written to output stream.");
+                Logger.Warning("Speech synthesized for text [{Text}], and the audio was written to output stream.", text);
                 return AudioConverter.Resample(result.AudioData, 48000, 48000, 1, 2);
             }
             else if (result.Reason == ResultReason.Canceled)
             {
                 var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
-                Logger.Warning($"CANCELED: Reason={cancellation.Reason}");
+                Logger.Warning("CANCELED: Reason={Reason}", cancellation.Reason);
 
                 if (cancellation.Reason == CancellationReason.Error)
                 {
-                    Logger.Warning($"CANCELED: ErrorCode={cancellation.ErrorCode}");
-                    Logger.Warning($"CANCELED: ErrorDetails=[{cancellation.ErrorDetails}]");
-                    Logger.Warning($"CANCELED: Did you update the subscription info?");
+                    Logger.Warning("CANCELED: ErrorCode={ErrorCode}", cancellation.ErrorCode);
+                    Logger.Warning("CANCELED: ErrorDetails=[{ErrorDetails}]", cancellation.ErrorDetails);
+                    Logger.Warning("CANCELED: Did you update the subscription info?");
                 }
 
                 return null;
@@ -305,12 +312,12 @@ internal class Program
         return ssmlDoc;
     }
 
-    public static Localization? GetLocalization()
+    public static Localization GetLocalization()
     {
         Localization output = new();
         string path = Path.Combine("localizations", $"{Config.Voice.Language.ToLower()}.json");
 
-        Logger.Information($"Loading {path}");
+        Logger.Information("Loading {Path}", path);
 
         string json_string = File.ReadAllText(Path.Combine(CurrentDir, path));
 
@@ -329,15 +336,120 @@ internal class Program
             else
             {
                 Logger.Error("Localization file isn't valid!!");
-                return null;
             }
         }
-        catch (Exception ex) { Logger.Error(ex, "Localization file isn't valid!!"); return null; }
+        catch (Exception ex) { Logger.Error(ex, "Localization file isn't valid!!"); }
         finally
         {
-            Logger.Information($"Localization Loaded");
+            Logger.Information("Localization Loaded");
         }
 
         return output;
+    }
+
+    public static void RunMechanic(BossData bossData, string[] players, VoiceNextConnection vnc)
+    {
+        stop = false;
+
+        for (int bmIndex = 0; bmIndex <= bossData.Mechanics.Length - 1; bmIndex++)
+        {
+            CancellationTokenSource cts = new();
+            CancellationToken token = cts.Token;
+            cts.CancelAfter(TimeSpan.FromSeconds(bossData.TimeLimit));
+            token.ThrowIfCancellationRequested();
+
+            BossMechanics bossMechanics = bossData.Mechanics[bmIndex];
+
+            Thread thread = new(() =>
+            {
+                Thread.CurrentThread.Name = $"BossMechanics{bmIndex + 1}";
+
+                int seconds = 1;
+                int interval = 1;
+
+                int index = 0;
+
+                Localization localization = GetLocalization();
+
+                while (!token.IsCancellationRequested)
+                {
+                    if (seconds == (bossMechanics.StartTime - 4) && bmIndex == 0)
+                    {
+                        Say(localization.TimerCountDown, vnc);
+                    }
+
+                    if (seconds >= bossMechanics.StartTime)
+                    {
+                        if (bossMechanics.WarnTime != 0)
+                        {
+                            if (interval == (bossMechanics.Interval - bossMechanics.WarnTime))
+                            {
+                                Say(localization.TimerStart, vnc);
+                            }
+                        }
+
+                        if (interval == bossMechanics.Interval)
+                        {
+                            if (bossMechanics.PlayersInvolved != 0)
+                            {
+                                for (int playerindex = 1; playerindex <= bossMechanics.PlayersInvolved; playerindex++)
+                                {
+                                    if ((index + 1) > bossMechanics.MechanicNames.Length)
+                                    {
+                                        index = 0;
+                                    }
+
+                                    string MechanicName = bossMechanics.MechanicNames[index];
+                                    string PlayerName = localization.DefaultPlayerNameFormat.Replace("%(name)", players[(playerindex - 1)]).Replace("%(index)", playerindex.ToString());
+
+                                    Say(localization.MechanicsFormat.Replace("%(playerName)", PlayerName).Replace("%(mechanicName)", MechanicName), vnc);
+
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                Say(bossMechanics.MechanicNames[0], vnc);
+                            }
+
+                            interval = 0;
+                        }
+
+                        interval++;
+                    }
+
+                    if (stop) { break; }
+
+                    seconds++;
+                    Thread.Sleep(1000);
+                }
+            });
+            thread.IsBackground = true;
+            thread.Start();
+            Thread.Sleep(500);
+        }
+    }
+
+    public static string LastSay = "";
+
+    public static void Say(string text, VoiceNextConnection vnc)
+    {
+        if (!LastSay.Equals(text))
+        {
+            LastSay = text;
+            Logger.Information("Saying {Text}", text);
+
+            try
+            {
+                vnc.SendSpeakingAsync(true);
+                var ffout = new MemoryStream(Program.GetTTSStream(text).GetAwaiter().GetResult() ?? Array.Empty<byte>());
+
+                var txStream = vnc.GetTransmitSink();
+                ffout.CopyToAsync(txStream);
+                txStream.FlushAsync();
+                vnc.WaitForPlaybackFinishAsync();
+            }
+            catch (Exception ex) { Logger.Error(ex, "Failed saying {Text}", text); }
+        }
     }
 }

@@ -25,7 +25,15 @@ public struct Localization
     private string defaultMechanicsFormat = string.Empty;
     private string defaultDefaultPlayerNameFormat = string.Empty;
 
-    [JsonProperty("timercountdown")]
+    public Localization()
+    {
+       defaultTimerCountDown = string.Empty;
+       defaultTimerStart = string.Empty;
+       defaultMechanicsFormat = string.Empty;
+       defaultDefaultPlayerNameFormat = string.Empty;
+    }
+
+    [JsonProperty("timer-count-down")]
     public string TimerCountDown
     {
         get => defaultTimerCountDown;
@@ -35,7 +43,7 @@ public struct Localization
         }
     }
 
-    [JsonProperty("timerstart")]
+    [JsonProperty("timer-start")]
     public string TimerStart
     {
         get => defaultTimerStart;
@@ -45,7 +53,7 @@ public struct Localization
         }
     }
 
-    [JsonProperty("mechanicsformat")]
+    [JsonProperty("mechanics-format")]
     public string MechanicsFormat
     {
         get => defaultMechanicsFormat;
@@ -55,7 +63,7 @@ public struct Localization
         }
     }
 
-    [JsonProperty("defaultplayernameformat")]
+    [JsonProperty("default-player-name-format")]
     public string DefaultPlayerNameFormat
     {
         get => defaultDefaultPlayerNameFormat;

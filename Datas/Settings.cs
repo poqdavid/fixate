@@ -20,11 +20,34 @@ namespace Fixate.Datas;
 
 public struct Settings
 {
+    private Discord defaultDiscord = new();
+    private Voice defaultVoice = new();
+
     [JsonProperty("discord")]
-    public Discord Discord { get; set; } = new();
+    public Discord Discord
+    {
+        get => defaultDiscord;
+        set
+        {
+            defaultDiscord = value;
+        }
+    }
 
     [JsonProperty("voice")]
-    public Voice Voice { get; set; } = new();
+    public Voice Voice
+    {
+        get => defaultVoice;
+        set
+        {
+            defaultVoice = value;
+        }
+    }
+
+    public Settings()
+    {
+        defaultDiscord = new Discord();
+        defaultVoice = new Voice();
+    }
 
     /// <summary>
     /// Saves the App settings in selected path.
